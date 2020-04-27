@@ -1,0 +1,38 @@
+html,body,.container,h1,h2,h3,div,a,p{
+	margin: 0;
+	padding: 0;
+}
+
+html,body{
+	width:100%;
+	height:100%;
+}
+.container{
+	height:100%;
+	/* position: relative; */
+}
+.canvas{
+	width:80%;
+	height:100%;
+	/* position: relative; */
+}
+
+#wheel-img{
+	/* position:absolute; */
+	width: 800px;
+	height: 800px;
+	transform-origin: center;
+
+}
+
+.textbox{
+	transform-origin: 0ch 60vh;
+	position: absolute;
+}
+
+.wheel{
+	stroke: black;
+	stroke-width: 2pt;
+	fill:beige;
+	transform-origin: center;
+}
