@@ -10,125 +10,220 @@ const w = W - m.r - m.l;
 const h = H - m.t - m.b;
 console.log(`W,H:${W},${H}`);
 
-	
-
 
 //d3.json("data-sample.json").then(data=>{})
 dataPromise.then(function(rows){
-		console.log(rows);
+	console.log(rows);
 
-		var count_year =rows.length;
+	var dot_originalX = 310;
+	var dot_originalY = 300;
+	var dot_radius = 5;
+	var count_year = rows[rows.length-1].year-rows[0].year+1;//number of all dots
+	var avg_degree = 180/count_year;
 
-		const canvas = d3.select('.canvas')
-			.append('svg')
-			.attr('width',W)
-			.attr('height',H)
-			.append('g')
-			.attr('transform',`translate(0,${m.t})`)
-			.attr('width',w)
-			.attr('height',h);
+	//add svg	
+	const canvas = d3.select('.canvas')
+		.append('svg')
+		.attr('width',W)
+		.attr('height',H)
+		
 
-	const c = canvas.append('circle')
-			.attr('class','wheel')
-			.attr('cx',50)
-			.attr('cy',20)
-			.attr('r',20);
+	//wheel image
+	var wheel = canvas.append('g')
+		//.attr('class','wheel-g')
+		//.attr('transform',`translate(-200,0)`)
+		.attr('width',600)
+		.attr('height',600)
+		.append('image')
+		.attr('class','wheel-img')
+		//.attr('transform','translate(-200,0)')
+		.attr('xlink:href',"../img/wheel.png")
+		.attr("x", -300)
+		.attr("y", 0)
+		//.on('click',rotateAnimation);
 
-	const line = canvas.append('line')
-			.attr("x1", 50)
-			.attr("y1", 20)
-			.attr("x2", 70)
-			.attr("y2", 20)
-			.style('stroke','black')
-			.style('stroke-width','2pt');
+	//interaction-rotation
 	
-	c.on("click",function(d){
-		if(d.clicked === true){
-			d.clicked = false;
-		}
-		line.attr('transform','rotate(-45,50,20)');
+	// interpol_rotate.push(d3.interpolateString("rotate(0,0,300)", "rotate(45,0,300)"));
+	// interpol_rotate.push(d3.interpolateString("rotate(45,0,300)", "rotate(90,0,300)"));
+	// interpol_rotate.push(d3.interpolateString("rotate(90,0,300)", "rotate(135,0,300)"));
+	
+
+	//var interpol_rotate1 = d3.interpolateString("rotate(0,0,300)", "rotate(45,0,300)");
+	// var interpol_rotate2 = d3.interpolateString("rotate(45,0,200)", "rotate(90,0,200)");
+	// var interpol_rotate3 = d3.interpolateString( "rotate(90,0,200)", "rotate(135,0,200)"); 
+	// var interpol_rotate_back1 = d3.interpolateString( "rotate(45,0,300)", "rotate(0,0,300)");  
+	// var interpol_rotate_back2 = d3.interpolateString( "rotate(90,0,200)", "rotate(45,0,200)");
+	// var interpol_rotate_back3 = d3.interpolateString( "rotate(135,0,200)", "rotate(90,0,200)");
+
+	var interpol_rotate = [];
+	for(i=0;i<3;i++){
+		interpol_rotate[i] = d3.interpolateString("rotate("+ 45*i +",0,300)", "rotate("+ 45*(i+1) +",0,300)");
+	}
+	console.log(interpol_rotate);
+	
+
+	//scrolling event
+	var index =0;
+	window.addEventListener('scroll', function() {
+		document.getElementById('showScroll').innerHTML = 'currentScroll='+ window.scrollY + 'px';
+	});
+
+	//throttle
+	// window.addEventListener('scroll', throttle(callback,1000));
+	// function throttle(fn,wait){
+	// 	var time = Date.now();
+	// 	return function(){
+	// 		if(time+wait-Date.now()<0){
+	// 			fn();
+	// 			time=Date.now();
+	// 		}
+	// 	}
+	// }
+
+	//debounce
+	window.addEventListener('scroll', debounce(callback, 400));
+	
+	function callback(){
+		window.addEventListener('wheel', function(event)
+		{
+			// if (event.deltaY < 0){
+			// 	console.log('scrolling up');
+			// 	wheel
+			// 	.transition()
+			// 		//.duration(500)
+			// 		//.attr('transform','rotate(30,0,300)');
+			// 		.attrTween('transform',function(d,i,a){return interpol_rotate_back1;})
+			// }
+			if (event.deltaY > 0){
+				console.log('scrolling down');
+
+					wheel
+					.transition()
+					.duration(500)
+					//.attr('transform','rotate(-30,0,300)');
+					.attrTween('transform',function(){
+						return interpol_rotate[index];
+					})
+					if(index === (interpol_rotate.length-1)){
+						index=0;
+					}else{
+						index++;
+					}
+			}
 		});
+	}	
 
-		// var wheel = canvas.append('circle')
-		// 	.attr('class','wheel')
-		// 	.attr('cx',0)
-		// 	.attr('cy',400)
-		// 	.attr('r',400);
+	function debounce (func, interval) {
+		var timeout;
+		return function () {
+		  var context = this, args = arguments;
+		  var later = function () {
+			timeout = null;
+			func.apply(context, args);
+		  };
+		  clearTimeout(timeout);
+		  timeout = setTimeout(later, interval || 200);
+		}
+	  }
 
-		//wheel image
-		var wheel = canvas.append('image')
-			.attr('id','wheel-img')
-			.attr('transform','translate(-430,50)')
-			.attr('xlink:href',"../img/wheel.png");
 
-		// //label dots
-		// var nodes = canvas.selectAll('.node')
-		// 	.data(rows);
-		// nodes.select('.circle')
-		// 	.style('fill','green')	
-		
-		// const nodesEnter = nodes.enter()
-		// 	.append('g')
-		// 	.attr('class','dots');
-		// nodesEnter.append('.circle')
-		// 	.style('fill','yellow');
+	//dots
+	const dots = canvas.selectAll('.dot')
+		.data(rows)
+		.enter()
+		.append('circle')
+		.attr('cx',(d,i)=>{
+			var degree = avg_degree * (d.year-2018);
+			// console.log(degree);
+			// console.log("cx-cos"+ originalX * Math.cos(toRadians(degree)));
+			return dot_originalX * Math.cos(toRadians(degree));	
+		})
+		.attr('cy',(d,i)=>{
+			var degree = avg_degree * (d.year-2018);
+			if(degree<=90){
+				//console.log("cy-sin"+Math.sin(toRadians(degree)));
+				return dot_originalX * Math.sin(toRadians(degree)) + dot_originalY;
+			}else if (degree < 180){
+				//console.log("cy-sin"+Math.sin(toRadians(degree)));
+				return dot_originalX * Math.sin(toRadians(180-degree)) + dot_originalY;
+			}
+		})
+		.attr('r',dot_radius)
+		.style('fill','black');
 
-		// nodes.merge(nodesEnter)
-		// 	.transition()
-		// 	.
-		// 	.enter()
-		// 	.append('.circle')
-		// 	.attr('cx','420px')
-		// 	.attr('cy','400')
-		// 	.attr('r',2)
-		// 	.style('fill','black');
 
-		
-		var rotateTimes = 0;
-		var i=0;
+
+
+
+
+
+
+
+	//text
+
+	// create a new div element 
+	var newDiv = document.createElement("div"); 
+	// //Add content
+	newDiv.innerHTML="Title"; 
+	newDiv.setAttribute('class','main-items');
+	document.body.appendChild(newDiv);
+	
+
+	var rotateTimes = 0;
+	var i=0;
+	var t=0
 
 		// var textBox = d3.select('.textbox')
 		// 	.attr('transform',`translate(50,200)`)
 		// 	.attr('width',200)
 		// 	.attr('height',80);
 
-		var textTimes = canvas.append('text')
-			.attr('transform','translate(50,250)')
-			.text('rotate times');
-		var textCity = canvas.append('text')
-			.attr('transform','translate(50,280)')
-			.text('city');
+	// var textTimes = canvas.append('text')
+	// 	.attr('transform','translate(50,250)')
+	// 	.text('rotate times');
+	// var textCity = canvas.append('text')
+	// 	.attr('transform','translate(50,280)')
+	// 	.text('city');
+		
+	
+	
 
-		canvas.on("click", function(){
-			console.log(`i= ${i}`);
-			console.log(`rotateTimes= ${rotateTimes+1}`);
-			
-			rotateTimes++;
-			
-			wheel.transition()
-				.attr('transform','rotate(-30)');
-			
-			textTimes.text(function(){
-				return `rotate ${rotateTimes}`;
-			})
-			textCity.text(function(){
-				if(i>=count_year){
-					i=0;
-				}
-				return rows[i].city;
-			})
-			i++;
-			
-		})
+		
+	//rotation		
+		// canvas.on("click", function(){
+				
+		// 		console.log(`i= ${i}`);
+		// 		console.log(`rotateTimes= ${rotateTimes+1}`);
+				
+		// 		clickStatus = "true"
+
+		// 		rotateTimes++;
+				
+		// 		wheel.transition()
+		// 			.attr('transform','rotate(90,0,250)');
+				
+		// 		textTimes.text(function(){
+		// 			return `rotate ${rotateTimes}`;
+		// 		})
+		// 		textCity.text(function(){
+		// 			if(i>=count_year){
+		// 				i=0;
+		// 			}
+		// 			return rows[i].city;
+		// 		})
+		// 		i++;
+				
+		// 	})
+		
+		
 
 		
 	})
-
-function rotateWheel(){
-	var lastDegrees = 1;
+function toRadians (angle) {
+	return angle * (Math.PI / 180);
 }
-
-
+	
 //parse csv
 function parseData(d){
 	return {
