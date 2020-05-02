@@ -30,17 +30,14 @@ dataPromise.then(function(rows){
 
 	//wheel image
 	var wheel = canvas.append('g')
-		//.attr('class','wheel-g')
-		//.attr('transform',`translate(-200,0)`)
+		//.attr('transform','translate(-300,0)')
 		.attr('width',600)
 		.attr('height',600)
 		.append('image')
 		.attr('class','wheel-img')
-		//.attr('transform','translate(-200,0)')
 		.attr('xlink:href',"../img/wheel.png")
 		.attr("x", -300)
 		.attr("y", 0)
-		//.on('click',rotateAnimation);
 
 	//interaction-rotation
 	
@@ -48,14 +45,8 @@ dataPromise.then(function(rows){
 	// interpol_rotate.push(d3.interpolateString("rotate(45,0,300)", "rotate(90,0,300)"));
 	// interpol_rotate.push(d3.interpolateString("rotate(90,0,300)", "rotate(135,0,300)"));
 	
-
 	//var interpol_rotate1 = d3.interpolateString("rotate(0,0,300)", "rotate(45,0,300)");
-	// var interpol_rotate2 = d3.interpolateString("rotate(45,0,200)", "rotate(90,0,200)");
-	// var interpol_rotate3 = d3.interpolateString( "rotate(90,0,200)", "rotate(135,0,200)"); 
 	// var interpol_rotate_back1 = d3.interpolateString( "rotate(45,0,300)", "rotate(0,0,300)");  
-	// var interpol_rotate_back2 = d3.interpolateString( "rotate(90,0,200)", "rotate(45,0,200)");
-	// var interpol_rotate_back3 = d3.interpolateString( "rotate(135,0,200)", "rotate(90,0,200)");
-
 
 	//scrolling event
 	window.addEventListener('scroll', function() {
@@ -63,7 +54,7 @@ dataPromise.then(function(rows){
 	});
 
 	//throttle
-	window.addEventListener('scroll', throttle(callback,1000));
+	window.addEventListener('scroll', throttle(callback,500));
 	function throttle(fn,wait){
 		var time = Date.now();
 		return function(){
@@ -77,10 +68,9 @@ dataPromise.then(function(rows){
 	//debounce
 	// window.addEventListener('scroll', debounce(callback, 400));
 	
-	var arr =[0,30,60,90,120,150,180,210,240,270,300,330,360];
-	console.log(arr.length);
 	var index =0;
-
+	var arr =[0,30,60,90,120,150,180,210,240,270,300,330,360];//test array
+	
 	function callback(){
 		window.addEventListener('wheel', function(event)
 		{
@@ -90,14 +80,15 @@ dataPromise.then(function(rows){
 			// 	.transition()
 			// 		//.duration(500)
 			// 		//.attr('transform','rotate(30,0,300)');
-			// 		.attrTween('transform',function(d,i,a){return interpol_rotate_back1;})
+			// 		.attrTween('transform',function(){return interpol_rotate_back1;})
 			// }
 			if (event.deltaY > 0){
 				console.log('scrolling down');
 
 				wheel.transition()
 					.duration(500)
-					.attrTween('transform',rotTween(arr[index],arr[index+1]));
+					.attrTween('transform',rotTween(arr[index],arr[index+1]))
+					//.attrTween('transform',rotTween)
 					//.attr('transform','matrix(0.866025,0.5,-0.5,0.866025,0,0)')
 					//.attrTween('transform',function(d,i,a){return interpol_rotate1;})
 					// .attrTween('transform',function(){
@@ -108,31 +99,38 @@ dataPromise.then(function(rows){
 					// }else{
 					// 	index++;
 					// }
-				if(index === arr.length){
-					index === 0;
-				}else{
-					index++;
-				}
+					if(index === arr.length){
+						index === 0;
+					}else{
+						index++;
+					}
 			}
 		});
 	}	
 
-
-	var interpol_rotate = [];
-	for(i=0;i<3;i++){
-		interpol_rotate[i] = d3.interpolateString("rotate("+ 45*i +",0,300)", "rotate("+ 45*(i+1) +",0,300)");
-	}
-	console.log(interpol_rotate);
-	
-
 	function rotTween(a,b){
-			var func = d3.interpolate(a,b);
-			return function(t){
-				return "rotate(" + func(t) + ",0,300)";
-			};
-		
-		
+		var func = d3.interpolate(a,b);
+		return function(t){
+			return "rotate(" + func(t) + ",0,300)";
+		};	
 	}
+
+	// function rotTween(){
+	// 	var func = d3.interpolate(0,360);
+	// 	return function(t){
+	// 		return "rotate(" + func(t) + ",0,300)";
+	// 	};	
+	// }
+	
+	//const alreadyTransformed = wheel.attr('transform');
+	//console.log(alreadyTransformed);
+
+	// var interpol_rotate = [];
+	// for(i=0;i<3;i++){
+	// 	interpol_rotate[i] = d3.interpolateString("rotate("+ 45*i +",0,300)", "rotate("+ 45*(i+1) +",0,300)");
+	// }
+	// console.log(interpol_rotate);
+	
 
 	function debounce (func, interval) {
 		var timeout;
@@ -172,14 +170,7 @@ dataPromise.then(function(rows){
 		.attr('r',dot_radius)
 		.style('fill','black');
 
-
-
-
-
-
-
-
-
+		
 	//text
 
 	// create a new div element 
