@@ -56,34 +56,31 @@ dataPromise.then(function(rows){
 	// var interpol_rotate_back2 = d3.interpolateString( "rotate(90,0,200)", "rotate(45,0,200)");
 	// var interpol_rotate_back3 = d3.interpolateString( "rotate(135,0,200)", "rotate(90,0,200)");
 
-	var interpol_rotate = [];
-	for(i=0;i<3;i++){
-		interpol_rotate[i] = d3.interpolateString("rotate("+ 45*i +",0,300)", "rotate("+ 45*(i+1) +",0,300)");
-	}
-	console.log(interpol_rotate);
-	
 
 	//scrolling event
-	var index =0;
 	window.addEventListener('scroll', function() {
 		document.getElementById('showScroll').innerHTML = 'currentScroll='+ window.scrollY + 'px';
 	});
 
 	//throttle
-	// window.addEventListener('scroll', throttle(callback,1000));
-	// function throttle(fn,wait){
-	// 	var time = Date.now();
-	// 	return function(){
-	// 		if(time+wait-Date.now()<0){
-	// 			fn();
-	// 			time=Date.now();
-	// 		}
-	// 	}
-	// }
+	window.addEventListener('scroll', throttle(callback,1000));
+	function throttle(fn,wait){
+		var time = Date.now();
+		return function(){
+			if(time+wait-Date.now()<0){
+				fn();
+				time=Date.now();
+			}
+		}
+	}
 
 	//debounce
-	window.addEventListener('scroll', debounce(callback, 400));
+	// window.addEventListener('scroll', debounce(callback, 400));
 	
+	var arr =[0,30,60,90,120,150,180,210,240,270,300,330,360];
+	console.log(arr.length);
+	var index =0;
+
 	function callback(){
 		window.addEventListener('wheel', function(event)
 		{
@@ -98,21 +95,44 @@ dataPromise.then(function(rows){
 			if (event.deltaY > 0){
 				console.log('scrolling down');
 
-					wheel
-					.transition()
+				wheel.transition()
 					.duration(500)
-					//.attr('transform','rotate(-30,0,300)');
-					.attrTween('transform',function(){
-						return interpol_rotate[index];
-					})
-					if(index === (interpol_rotate.length-1)){
-						index=0;
-					}else{
-						index++;
-					}
+					.attrTween('transform',rotTween(arr[index],arr[index+1]));
+					//.attr('transform','matrix(0.866025,0.5,-0.5,0.866025,0,0)')
+					//.attrTween('transform',function(d,i,a){return interpol_rotate1;})
+					// .attrTween('transform',function(){
+					// 	return interpol_rotate[index];
+					// })
+					// if(index === (interpol_rotate.length-1)){
+					// 	index=0;
+					// }else{
+					// 	index++;
+					// }
+				if(index === arr.length){
+					index === 0;
+				}else{
+					index++;
+				}
 			}
 		});
 	}	
+
+
+	var interpol_rotate = [];
+	for(i=0;i<3;i++){
+		interpol_rotate[i] = d3.interpolateString("rotate("+ 45*i +",0,300)", "rotate("+ 45*(i+1) +",0,300)");
+	}
+	console.log(interpol_rotate);
+	
+
+	function rotTween(a,b){
+			var func = d3.interpolate(a,b);
+			return function(t){
+				return "rotate(" + func(t) + ",0,300)";
+			};
+		
+		
+	}
 
 	function debounce (func, interval) {
 		var timeout;
