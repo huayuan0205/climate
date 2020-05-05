@@ -15,11 +15,22 @@ console.log(`W,H:${W},${H}`);
 dataPromise.then(function(rows){
 	console.log(rows);
 
-	var dot_originalX = 310;
-	var dot_originalY = 300;
+	var start_dot_originalX = 310;
+	var start_dot_originalY = 350;
 	var dot_radius = 5;
-	var count_year = rows[rows.length-1].year-rows[0].year+1;//number of all dots
+	var startYear = rows[0].year;
+	var count_year = rows[rows.length-1].year-startYear+1;//number of all dots
 	var avg_degree = 180/count_year;
+
+	var rotating_degrees =[];
+
+	//calculate rotating degrees
+	for(i=1;i<rows.length;i++){
+		var interval_year = rows[i].year-startYear;
+		var new_element = d3.format(".1f")(avg_degree * interval_year); 
+		rotating_degrees.push(new_element);		
+	}
+	console.log(`degrees have ${rotating_degrees.length} elements: ${rotating_degrees}`);
 
 	//add svg	
 	const canvas = d3.select('.canvas')
@@ -27,17 +38,39 @@ dataPromise.then(function(rows){
 		.attr('width',W)
 		.attr('height',H)
 		
-
-	//wheel image
+	//add wheel image
 	var wheel = canvas.append('g')
-		//.attr('transform','translate(-300,0)')
-		.attr('width',600)
-		.attr('height',600)
 		.append('image')
 		.attr('class','wheel-img')
-		.attr('xlink:href',"../img/wheel.png")
-		.attr("x", -300)
-		.attr("y", 0)
+		.attr('xlink:href',"../img/wheel-blur.png")
+		.attr('transform','translate(-300,50)')
+
+	//dots
+	var dots = canvas.append('g')
+	
+	dots.selectAll('.dot')
+		.data(rows)
+		.enter()
+		.append('circle')
+		.attr('cx',(d)=>{
+			var rotate_degree = avg_degree * (d.year-startYear);
+			// console.log(degree);
+			// console.log("cx-cos"+ originalX * Math.cos(toRadians(degree)));
+			return start_dot_originalX * Math.cos(toRadians(rotate_degree));	
+		})
+		.attr('cy',(d)=>{
+			var rotate_degree = avg_degree * (d.year-startYear);
+			if(rotate_degree<=90){
+				//console.log("cy-sin"+Math.sin(toRadians(degree)));
+				return start_dot_originalX * Math.sin(toRadians(rotate_degree)) + start_dot_originalY;
+			}else if (rotate_degree < 180){
+				//console.log("cy-sin"+Math.sin(toRadians(degree)));
+				return start_dot_originalX * Math.sin(toRadians(180-rotate_degree)) + start_dot_originalY;
+			}
+		})
+		.attr('r',dot_radius)
+		.style('fill','grey');
+
 
 	//interaction-rotation
 	
@@ -54,59 +87,75 @@ dataPromise.then(function(rows){
 	});
 
 	//throttle
-	window.addEventListener('scroll', throttle(callback,500));
-	function throttle(fn,wait){
-		var time = Date.now();
-		return function(){
-			if(time+wait-Date.now()<0){
-				fn();
-				time=Date.now();
-			}
-		}
-	}
+	//window.addEventListener('scroll', callback());
+	
+	// window.addEventListener('scroll', throttle(callback,500));
+	// function throttle(fn,wait){
+	// 	var time = Date.now();
+	// 	return function(){
+	// 		if(time+wait-Date.now()<0){
+	// 			fn();
+	// 			time=Date.now();
+	// 		}
+	// 	}
+	// }
 
 	//debounce
 	// window.addEventListener('scroll', debounce(callback, 400));
 	
 	var index =0;
 	var arr =[0,30,60,90,120,150,180,210,240,270,300,330,360];//test array
-	
-	function callback(){
-		window.addEventListener('wheel', function(event)
-		{
-			// if (event.deltaY < 0){
-			// 	console.log('scrolling up');
-			// 	wheel
-			// 	.transition()
-			// 		//.duration(500)
-			// 		//.attr('transform','rotate(30,0,300)');
-			// 		.attrTween('transform',function(){return interpol_rotate_back1;})
-			// }
-			if (event.deltaY > 0){
-				console.log('scrolling down');
 
-				wheel.transition()
-					.duration(500)
-					.attrTween('transform',rotTween(arr[index],arr[index+1]))
-					//.attrTween('transform',rotTween)
-					//.attr('transform','matrix(0.866025,0.5,-0.5,0.866025,0,0)')
-					//.attrTween('transform',function(d,i,a){return interpol_rotate1;})
-					// .attrTween('transform',function(){
-					// 	return interpol_rotate[index];
-					// })
-					// if(index === (interpol_rotate.length-1)){
-					// 	index=0;
-					// }else{
-					// 	index++;
-					// }
-					if(index === arr.length){
-						index === 0;
-					}else{
-						index++;
-					}
+	var scrollDistance = 0;
+	//var curretDistance = document.body.scrollTop();
+	
+	window.addEventListener('wheel', function(event)
+	{
+		// if (event.deltaY < 0){
+		// 	console.log('scrolling up');
+		// 	wheel
+		// 	.transition()
+		// 		//.duration(500)
+		// 		//.attr('transform','rotate(30,0,300)');
+		// 		.attrTween('transform',function(){return interpol_rotate_back1;})
+		// }
+		if (event.deltaY > 0){
+			console.log(`${index+1}scrolling down: ${event.deltaY}`);
+			scrollDistance += event.deltaY;
+
+			//var rotateDegrees = scrollDistance/5;//test angle
+			var rotateDegrees = rotating_degrees[index];
+			
+			wheel.attr('transform', `translate(-300, 50) rotate(${rotateDegrees} 300 300)`);
+			console.log(rotateDegrees);
+			//console.log(curretDistance);
+
+			dots.attr('transform',`rotate(${rotateDegrees} 0 350)`)
+			
+			if(index === (rotating_degrees.length-1)){
+				index = 0;
+				//how to stop rotating
+			}else{
+				index++;
 			}
-		});
-	}	
+				
+			
+			// wheel.transition()
+			// 	.duration(500)
+			// 	.attrTween('transform',rotTween(arr[index],arr[index+1]))
+				//.attrTween('transform',rotTween)
+				//.attr('transform','matrix(0.866025,0.5,-0.5,0.866025,0,0)')
+				//.attrTween('transform',function(d,i,a){return interpol_rotate1;})
+				// .attrTween('transform',function(){
+				// 	return interpol_rotate[index];
+				// })
+			
+		}
+	});	
+	
+
+
+
 
 	function rotTween(a,b){
 		var func = d3.interpolate(a,b);
@@ -146,29 +195,7 @@ dataPromise.then(function(rows){
 	  }
 
 
-	//dots
-	const dots = canvas.selectAll('.dot')
-		.data(rows)
-		.enter()
-		.append('circle')
-		.attr('cx',(d,i)=>{
-			var degree = avg_degree * (d.year-2018);
-			// console.log(degree);
-			// console.log("cx-cos"+ originalX * Math.cos(toRadians(degree)));
-			return dot_originalX * Math.cos(toRadians(degree));	
-		})
-		.attr('cy',(d,i)=>{
-			var degree = avg_degree * (d.year-2018);
-			if(degree<=90){
-				//console.log("cy-sin"+Math.sin(toRadians(degree)));
-				return dot_originalX * Math.sin(toRadians(degree)) + dot_originalY;
-			}else if (degree < 180){
-				//console.log("cy-sin"+Math.sin(toRadians(degree)));
-				return dot_originalX * Math.sin(toRadians(180-degree)) + dot_originalY;
-			}
-		})
-		.attr('r',dot_radius)
-		.style('fill','black');
+
 
 		
 	//text

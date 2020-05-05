@@ -6,15 +6,40 @@ html,body,.container,h1,h2,h3,div,a,p{
 html,body{
 	width:100%;
 	height:100%;
+	overflow: hidden;
 }
+
+body{
+	margin: 0;
+    overflow: hidden;
+    min-width: 320px;
+    background: #fff;
+    line-height: 1.4285em;
+    color: rgba(0,0,0,.87);
+}
+
 .container{
+	width: 100%;
 	height:100%;
-	/* position: relative; */
+	/* background-image: url(../img/alluminium_bg.png);
+	background-size: 2000px 2000px;
+	background-position:left top;
+	background-repeat: no-repeat; */
+	/* position:fixed; */
+}
+
+.backgear-img{
+	position: fixed;
+	opacity:.85;
+	filter: blur(4px);
+	z-index: -5999;
 }
 .canvas{
 	width:80%;
-	height:800px;
+	height:100%;
 	float: left;
+	position: fixed;
+	/* overflow:auto; */
 	/* transform-origin: center,center; */
 }
 
@@ -47,6 +72,8 @@ html,body{
 svg,g{
 	width:100%;
 	height:100%;
+	filter: brightness(0.75);
+	overflow: hidden;
 }
 
 /* .wheel-g{
@@ -59,8 +86,9 @@ svg,g{
 	position:fixed;
 	width: 600px;
 	height: 600px;
-	transform-origin:0,0;
-
+	/* transform-origin:0,0; */
+	opacity: .8;
+	z-index: -1999;
 }
 
 .textbox{
