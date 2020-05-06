@@ -10,6 +10,18 @@ const w = W - m.r - m.l;
 const h = H - m.t - m.b;
 console.log(`W,H:${W},${H}`);
 
+window.addEventListener('scroll', function(){
+	// detects new state and compares it with the new one
+	if ((document.body.getBoundingClientRect()).top > scrollPos){
+		document.getElementById('info-box').setAttribute('data-scroll-direction', 'UP');
+	}  
+	else{
+		document.getElementById('info-box').setAttribute('data-scroll-direction', 'DOWN');
+	}	  
+	// saves the new position for iteration.
+	scrollPos = (document.body.getBoundingClientRect()).top;
+  });
+
 
 //d3.json("data-sample.json").then(data=>{})
 dataPromise.then(function(rows){
@@ -44,6 +56,7 @@ dataPromise.then(function(rows){
 		.attr('class','wheel-img')
 		.attr('xlink:href',"../img/wheel-blur.png")
 		.attr('transform','translate(-300,50)')
+		
 
 	//dots
 	var dots = canvas.append('g')
@@ -52,6 +65,7 @@ dataPromise.then(function(rows){
 		.data(rows)
 		.enter()
 		.append('circle')
+		.attr('class','dot')
 		.attr('cx',(d)=>{
 			var rotate_degree = avg_degree * (d.year-startYear);
 			// console.log(degree);
@@ -73,20 +87,7 @@ dataPromise.then(function(rows){
 
 
 	//interaction-rotation
-	
-	// interpol_rotate.push(d3.interpolateString("rotate(0,0,300)", "rotate(45,0,300)"));
-	// interpol_rotate.push(d3.interpolateString("rotate(45,0,300)", "rotate(90,0,300)"));
-	// interpol_rotate.push(d3.interpolateString("rotate(90,0,300)", "rotate(135,0,300)"));
-	
-	//var interpol_rotate1 = d3.interpolateString("rotate(0,0,300)", "rotate(45,0,300)");
-	// var interpol_rotate_back1 = d3.interpolateString( "rotate(45,0,300)", "rotate(0,0,300)");  
 
-	//scrolling event
-	window.addEventListener('scroll', function() {
-		document.getElementById('showScroll').innerHTML = 'currentScroll='+ window.scrollY + 'px';
-	});
-
-	//throttle
 	//window.addEventListener('scroll', callback());
 	
 	// window.addEventListener('scroll', throttle(callback,500));
@@ -100,69 +101,86 @@ dataPromise.then(function(rows){
 	// 	}
 	// }
 
-	//debounce
-	// window.addEventListener('scroll', debounce(callback, 400));
-	
 	var index =0;
-	var arr =[0,30,60,90,120,150,180,210,240,270,300,330,360];//test array
-
 	var scrollDistance = 0;
+	var currentDots = dots.selectAll('.dot');
+	var currentWheel = d3.select('.wheel-img');
 	//var curretDistance = document.body.scrollTop();
 	
-	window.addEventListener('wheel', function(event)
-	{
-		// if (event.deltaY < 0){
-		// 	console.log('scrolling up');
-		// 	wheel
-		// 	.transition()
-		// 		//.duration(500)
-		// 		//.attr('transform','rotate(30,0,300)');
-		// 		.attrTween('transform',function(){return interpol_rotate_back1;})
-		// }
-		if (event.deltaY > 0){
-			console.log(`${index+1}scrolling down: ${event.deltaY}`);
-			scrollDistance += event.deltaY;
+	window.addEventListener('wheel', function(event){
+		//8.4,33.5,58.6,67.0,92.1,108.8,142.3,163.3,167.4,175.8
+		//var rotateDegrees = rotating_degrees[index];
 
-			//var rotateDegrees = scrollDistance/5;//test angle
-			var rotateDegrees = rotating_degrees[index];
-			
-			wheel.attr('transform', `translate(-300, 50) rotate(${rotateDegrees} 300 300)`);
-			console.log(rotateDegrees);
-			//console.log(curretDistance);
+		//scroll up
+		if (event.deltaY < 0){
+			console.log(`scrolling up: ${event.deltaY}`);
+			console.log("initial index: "+index);
 
-			dots.attr('transform',`rotate(${rotateDegrees} 0 350)`)
-			
-			if(index === (rotating_degrees.length-1)){
+			index--;
+
+			if(index < 0){
+				event.preventDefault();
 				index = 0;
-				//how to stop rotating
 			}else{
-				index++;
-			}
 				
-			
-			// wheel.transition()
-			// 	.duration(500)
-			// 	.attrTween('transform',rotTween(arr[index],arr[index+1]))
-				//.attrTween('transform',rotTween)
-				//.attr('transform','matrix(0.866025,0.5,-0.5,0.866025,0,0)')
-				//.attrTween('transform',function(d,i,a){return interpol_rotate1;})
-				// .attrTween('transform',function(){
-				// 	return interpol_rotate[index];
-				// })
-			
+				scrollDistance -= event.deltaY;
+
+				currentWheel.attr('transform', `translate(-300, 50) rotate(${-rotating_degrees[index]} 300 300)`);
+				currentDots.attr('transform',`rotate(${-rotating_degrees[index]} 0 350)`);
+
+				currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+				currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+				
+				console.log("["+index+"]"+ (-1)*rotating_degrees[index]);
+			}
 		}
-	});	
+		//scroll down
+		if (event.deltaY > 0){
+			console.log(`scrolling down: ${event.deltaY}`);
+			console.log("initial index: "+index);
+
+			if(index <0){
+				index=0;
+
+				scrollDistance += event.deltaY;
+				currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+				currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+
+				currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+				currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+
+				console.log("["+index+"]"+rotating_degrees[index]);
+
+				index++;
+				
+			}else if(index>=0 && index<rotating_degrees.length){
+				scrollDistance += event.deltaY;
+				//var rotateDegrees = scrollDistance/5;//test angle
+				
+				currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+				currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`)
+
+				currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+				currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+				
+				console.log("["+index+"]"+rotating_degrees[index]);
+
+				index++;
+			}else if(index === (rotating_degrees.length)){
+				event.preventDefault();
+			}
+		}
+	},
+	{passive: false});	
 	
 
 
-
-
-	function rotTween(a,b){
-		var func = d3.interpolate(a,b);
-		return function(t){
-			return "rotate(" + func(t) + ",0,300)";
-		};	
-	}
+	// function rotTween(a,b){
+	// 	var func = d3.interpolate(a,b);
+	// 	return function(t){
+	// 		return "rotate(" + func(t) + ",0,300)";
+	// 	};	
+	// }
 
 	// function rotTween(){
 	// 	var func = d3.interpolate(0,360);
@@ -181,18 +199,18 @@ dataPromise.then(function(rows){
 	// console.log(interpol_rotate);
 	
 
-	function debounce (func, interval) {
-		var timeout;
-		return function () {
-		  var context = this, args = arguments;
-		  var later = function () {
-			timeout = null;
-			func.apply(context, args);
-		  };
-		  clearTimeout(timeout);
-		  timeout = setTimeout(later, interval || 200);
-		}
-	  }
+	// function debounce (func, interval) {
+	// 	var timeout;
+	// 	return function () {
+	// 	  var context = this, args = arguments;
+	// 	  var later = function () {
+	// 		timeout = null;
+	// 		func.apply(context, args);
+	// 	  };
+	// 	  clearTimeout(timeout);
+	// 	  timeout = setTimeout(later, interval || 200);
+	// 	}
+	//   }
 
 
 
