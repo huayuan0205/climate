@@ -10,17 +10,6 @@ const w = W - m.r - m.l;
 const h = H - m.t - m.b;
 console.log(`W,H:${W},${H}`);
 
-window.addEventListener('scroll', function(){
-	// detects new state and compares it with the new one
-	if ((document.body.getBoundingClientRect()).top > scrollPos){
-		document.getElementById('info-box').setAttribute('data-scroll-direction', 'UP');
-	}  
-	else{
-		document.getElementById('info-box').setAttribute('data-scroll-direction', 'DOWN');
-	}	  
-	// saves the new position for iteration.
-	scrollPos = (document.body.getBoundingClientRect()).top;
-  });
 
 
 //d3.json("data-sample.json").then(data=>{})
@@ -84,8 +73,8 @@ dataPromise.then(function(rows){
 		})
 		.attr('r',dot_radius)
 		.style('fill','grey');
-
-
+		
+	
 	//interaction-rotation
 
 	//window.addEventListener('scroll', callback());
@@ -105,73 +94,119 @@ dataPromise.then(function(rows){
 	var scrollDistance = 0;
 	var currentDots = dots.selectAll('.dot');
 	var currentWheel = d3.select('.wheel-img');
+	var lastKnownPos = window.scrollY;
 	//var curretDistance = document.body.scrollTop();
+
+
+	let last_known_scroll_position = 0;
+	let ticking = false;
 	
-	window.addEventListener('wheel', function(event){
-		//8.4,33.5,58.6,67.0,92.1,108.8,142.3,163.3,167.4,175.8
-		//var rotateDegrees = rotating_degrees[index];
+	//scroll  
+	window.addEventListener('scroll', function(event){
+		document.getElementById('scrollLoc').innerHTML = window.pageYOffset + 'px';
+		// setInterval(callback, 500);
 
-		//scroll up
-		if (event.deltaY < 0){
-			console.log(`scrolling up: ${event.deltaY}`);
-			console.log("initial index: "+index);
+		//var diff = Math.abs(window.scrollY - lastKnownPos);
+		//var degrees = [8.4,33.5,58.6,67.0,92.1,108.8,142.3,163.3,167.4,175.8];
+		
+		last_known_scroll_position = window.scrollY;
 
-			index--;
-
-			if(index < 0){
-				event.preventDefault();
-				index = 0;
-			}else{
-				
-				scrollDistance -= event.deltaY;
-
-				currentWheel.attr('transform', `translate(-300, 50) rotate(${-rotating_degrees[index]} 300 300)`);
-				currentDots.attr('transform',`rotate(${-rotating_degrees[index]} 0 350)`);
-
-				currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-				currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-				
-				console.log("["+index+"]"+ (-1)*rotating_degrees[index]);
+		if (!ticking) {
+		  window.requestAnimationFrame(function() {
+			//scroll up
+			if(window.scrollY <=  lastKnownPos){
+				currentWheel.attr('transform',`translate(-300 50) rotate(30 300 300)`);
+				console.log('scroll up');
+				console.log(window.scrollY);
+				console.log('lastKnowPos'+lastKnownPos);
 			}
-		}
-		//scroll down
-		if (event.deltaY > 0){
-			console.log(`scrolling down: ${event.deltaY}`);
-			console.log("initial index: "+index);
-
-			if(index <0){
-				index=0;
-
-				scrollDistance += event.deltaY;
-				currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-				currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-
-				currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-				currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-
-				console.log("["+index+"]"+rotating_degrees[index]);
-
-				index++;
-				
-			}else if(index>=0 && index<rotating_degrees.length){
-				scrollDistance += event.deltaY;
-				//var rotateDegrees = scrollDistance/5;//test angle
-				
-				currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-				currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`)
-
-				currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-				currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-				
-				console.log("["+index+"]"+rotating_degrees[index]);
-
-				index++;
-			}else if(index === (rotating_degrees.length)){
-				event.preventDefault();
+			//scroll down
+			if(window.scrollY >= lastKnownPos ){
+					currentWheel.attr('transform',`translate(-300 50) rotate(-30 300 300)`);
+					console.log('scroll down');
+					console.log(window.scrollY);
+					console.log('lastKnowPos'+lastKnownPos);
 			}
+			lastKnownPos = window.scrollY;
+			
+			ticking = false;
+		  });
+	  
+		  ticking = true;
 		}
-	},
-	{passive: false});	
+
+		//window.unbind('scroll'); 
+			
+	});
+
+
+	function callback(){
+	
+		// if (window.scrollY < lastKnownPos){
+		// 	console.log(`scrolling up: ${window.scrollY}`);
+		// 	console.log("initial index: "+index);
+
+		// 	index--;
+
+		// 	if(index < 0){
+		// 		event.preventDefault();
+		// 		index = 0;
+		// 	}else{
+				
+		// 		scrollDistance -= window.scrollY;
+
+		// 		currentWheel.attr('transform', `translate(-300, 50) rotate(${-rotating_degrees[index]} 300 300)`);
+		// 		//currentDots.attr('transform',`rotate(${-rotating_degrees[index]} 0 350)`);
+
+		// 		currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+		// 		//currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+				
+		// 		lastKnownPos = window.scrollY;
+		// 		//console.log("["+index+"]"+ (-1)*rotating_degrees[index]);
+		// 	}
+		// }
+		
+		// //scroll down
+		
+		// if (window.scrollY > lastKnownPos){
+		// 	console.log(`scrolling down: ${window.scrollY}`);
+		// 	console.log("initial index: "+index);
+
+		// 	if(index <0){
+		// 		index=0;
+
+		// 		scrollDistance += window.scrollY;
+		// 		currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+		// 		//currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+
+		// 		currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+		// 		//currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+
+		// 		lastKnownPos = window.scrollY;
+		// 		console.log("["+index+"]"+rotating_degrees[index]);
+
+		// 		index++;
+				
+		// 	}else if(index>=0 && index<rotating_degrees.length){
+		// 		scrollDistance += window.scrollY;
+		// 		//var rotateDegrees = scrollDistance/5;//test angle
+				
+		// 		currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+		// 		//currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`)
+
+		// 		currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
+		// 		//currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
+				
+		// 		lastKnownPos = window.scrollY;
+		// 		console.log("["+index+"]"+rotating_degrees[index]);
+
+		// 		index++;
+		// 	}else if(index === (rotating_degrees.length)){
+		// 		event.preventDefault();
+		// 	}
+		// }
+	}
+	// ,false);	
 	
 
 
@@ -272,10 +307,9 @@ dataPromise.then(function(rows){
 				
 		// 	})
 		
-		
 
-		
 	})
+
 function toRadians (angle) {
 	return angle * (Math.PI / 180);
 }
