@@ -16,8 +16,8 @@ console.log(`W,H:${W},${H}`);
 dataPromise.then(function(rows){
 	console.log(rows);
 
-	var start_dot_originalX = 310;
-	var start_dot_originalY = 350;
+	var start_dot_originalX = 310;//310
+	var start_dot_originalY = 350;//350
 	var dot_radius = 5;
 	var startYear = rows[0].year;
 	var count_year = rows[rows.length-1].year-startYear+1;//number of all dots
@@ -34,7 +34,7 @@ dataPromise.then(function(rows){
 	console.log(`degrees have ${rotating_degrees.length} elements: ${rotating_degrees}`);
 
 	//add svg	
-	const canvas = d3.select('.canvas')
+	var canvas = d3.select('.canvas')
 		.append('svg')
 		.attr('width',W)
 		.attr('height',H)
@@ -42,24 +42,24 @@ dataPromise.then(function(rows){
 	//add wheel image
 	var wheel = canvas.append('g')
 		.append('image')
-		.attr('class','wheel-img')
+		.attr('id','wheel-img')
 		.attr('xlink:href',"../img/wheel-blur.png")
 		.attr('transform','translate(-300,50)')
 		
-
 	//dots
 	var dots = canvas.append('g')
-	
-	dots.selectAll('.dot')
+		.attr('id','timeline')
+		.selectAll('.dot')
 		.data(rows)
 		.enter()
 		.append('circle')
 		.attr('class','dot')
+		.attr('id', (d,i)=>{return `d-${i}`})
 		.attr('cx',(d)=>{
 			var rotate_degree = avg_degree * (d.year-startYear);
 			// console.log(degree);
 			// console.log("cx-cos"+ originalX * Math.cos(toRadians(degree)));
-			return start_dot_originalX * Math.cos(toRadians(rotate_degree));	
+			return (start_dot_originalX * Math.cos(toRadians(rotate_degree)));	
 		})
 		.attr('cy',(d)=>{
 			var rotate_degree = avg_degree * (d.year-startYear);
@@ -73,7 +73,9 @@ dataPromise.then(function(rows){
 		})
 		.attr('r',dot_radius)
 		.style('fill','grey');
-		
+	
+	var dot_1 = d3.select('#d-0')
+		.style('fill','red');
 	
 	//interaction-rotation
 
@@ -90,225 +92,131 @@ dataPromise.then(function(rows){
 	// 	}
 	// }
 
+	
+	
+	var currentDots = canvas.selectAll('.dot');
+	var currentWheel = d3.select('#wheel-img');
+	
 	var index =0;
-	var scrollDistance = 0;
-	var currentDots = dots.selectAll('.dot');
-	var currentWheel = d3.select('.wheel-img');
+	//var degrees = [0,8.4,33.5,58.6,67.0,92.1,108.8,142.3,163.3,167.4,175.8];
+	var degrees = [0,8.4,25.1,25.1,8.4,25.1,16.7,33.5,21,4.1,8.4]//11 elements, 10 effective ones
+	var sumAngle = 0
+	var wheel_sumAngle = 0
+	var rotationAngle = degrees[index];
 	var lastKnownPos = window.scrollY;
-	//var curretDistance = document.body.scrollTop();
-
-
-	let last_known_scroll_position = 0;
-	let ticking = false;
+	//let ticking = false;
 	
 	//scroll  
+	//var canvas_scroll = document.querySelector('.canvas');
+	
 	window.addEventListener('scroll', function(event){
-		document.getElementById('scrollLoc').innerHTML = window.pageYOffset + 'px';
-		// setInterval(callback, 500);
-
-		//var diff = Math.abs(window.scrollY - lastKnownPos);
-		//var degrees = [8.4,33.5,58.6,67.0,92.1,108.8,142.3,163.3,167.4,175.8];
+		//document.getElementById('scrollLoc').innerHTML = window.pageYOffset + 'px';
 		
-		last_known_scroll_position = window.scrollY;
+		// var scrollSmoothTo = function(position){
+		// 	if(!window.requestAnimationFrame){
+		// 		window.requestAnimationFrame = function(callback,element){
+		// 			return setTimeout(callback,17)
+		// 		}
+		// 	}
 
-		if (!ticking) {
-		  window.requestAnimationFrame(function() {
-			//scroll up
-			if(window.scrollY <=  lastKnownPos){
-				currentWheel.attr('transform',`translate(-300 50) rotate(30 300 300)`);
-				console.log('scroll up');
-				console.log(window.scrollY);
-				console.log('lastKnowPos'+lastKnownPos);
+		// 	var scrollTop = document.querySelector('.canvas').scrollTop || document.body.scrollTop;
+		// 	console.log(scrollTop);
+
+		// 	var step = function(){
+		// 		var distance = position - scrollTop;
+		// 		scrollTop = scrollTop + distance/5;
+				
+		// 		if(Math.abs(distance)<1){
+		// 			window.scrollTo(0,position);
+		// 		}else{
+		// 			window.scrollTo(0,scrollTop);
+		// 			requestAnimationFrame(step);
+		// 		}
+		// 	};
+		// 	step();
+		// }
+
+		// scrollSmoothTo();
+		
+		if(window.scrollY <=  lastKnownPos){
+			if(index < 0){
+				event.preventDefault();
+				index = 0;
+			}else if(index === 0){
+				index = 0;
 			}
-			//scroll down
-			if(window.scrollY >= lastKnownPos ){
-					currentWheel.attr('transform',`translate(-300 50) rotate(-30 300 300)`);
-					console.log('scroll down');
-					console.log(window.scrollY);
-					console.log('lastKnowPos'+lastKnownPos);
+			else{
+				index --;
+	
+				rotationAngle = degrees[index];
+				sumAngle = sumAngle - rotationAngle;
+				wheel_sumAngle = wheel_sumAngle - 18;
+				currentWheel
+					.attr('transform',`translate(-300 50) rotate(${wheel_sumAngle} 300 300)`);
+				currentDots
+					.attr('transform',`translate(0 0) rotate(${sumAngle} 0 350)`);
 			}
-			lastKnownPos = window.scrollY;
-			
-			ticking = false;
-		  });
-	  
-		  ticking = true;
+			console.log('index: '+ index);
+			console.log('scroll up: '+ rotationAngle);
+			//console.log(window.scrollY);
+			//console.log('lastKnowPos'+lastKnownPos);
 		}
 
-		//window.unbind('scroll'); 
+		//scroll down
+		if(window.scrollY >= lastKnownPos){
+			if(index === degrees.length){
+				event.preventDefault();
+				index = degrees.length;
+			}else if(index === 0){
+				index = 1;
+
+				rotationAngle = degrees[index];
+				sumAngle = sumAngle + rotationAngle;
+				wheel_sumAngle = wheel_sumAngle + 18;
+				currentWheel
+					.attr('transform',`translate(-300 50) rotate(${wheel_sumAngle} 300 300)`);
+				currentDots
+					.attr('transform',`translate(0 0) rotate(${sumAngle} 0 350)`);
+
+				index ++;
+			}
+			else{
+				rotationAngle = degrees[index];
+				sumAngle = sumAngle + rotationAngle;
+				wheel_sumAngle = wheel_sumAngle + 18;
+				currentWheel
+					.attr('transform',`translate(-300 50) rotate(${wheel_sumAngle} 300 300)`);
+				currentDots
+					.attr('transform',`translate(0 0) rotate(${sumAngle} 0 350)`);
+
+				index ++;
+			}
 			
-	});
-
-
-	function callback(){
-	
-		// if (window.scrollY < lastKnownPos){
-		// 	console.log(`scrolling up: ${window.scrollY}`);
-		// 	console.log("initial index: "+index);
-
-		// 	index--;
-
-		// 	if(index < 0){
-		// 		event.preventDefault();
-		// 		index = 0;
-		// 	}else{
-				
-		// 		scrollDistance -= window.scrollY;
-
-		// 		currentWheel.attr('transform', `translate(-300, 50) rotate(${-rotating_degrees[index]} 300 300)`);
-		// 		//currentDots.attr('transform',`rotate(${-rotating_degrees[index]} 0 350)`);
-
-		// 		currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-		// 		//currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-				
-		// 		lastKnownPos = window.scrollY;
-		// 		//console.log("["+index+"]"+ (-1)*rotating_degrees[index]);
-		// 	}
-		// }
+			console.log('index: '+ index);
+			console.log('scroll down: '+ rotationAngle);
+			//console.log(window.scrollY);
+			//console.log('lastKnowPos'+lastKnownPos);
+		}
 		
-		// //scroll down
-		
-		// if (window.scrollY > lastKnownPos){
-		// 	console.log(`scrolling down: ${window.scrollY}`);
-		// 	console.log("initial index: "+index);
-
-		// 	if(index <0){
-		// 		index=0;
-
-		// 		scrollDistance += window.scrollY;
-		// 		currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-		// 		//currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-
-		// 		currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-		// 		//currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-
-		// 		lastKnownPos = window.scrollY;
-		// 		console.log("["+index+"]"+rotating_degrees[index]);
-
-		// 		index++;
-				
-		// 	}else if(index>=0 && index<rotating_degrees.length){
-		// 		scrollDistance += window.scrollY;
-		// 		//var rotateDegrees = scrollDistance/5;//test angle
-				
-		// 		currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-		// 		//currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`)
-
-		// 		currentWheel = currentWheel.attr('transform', `translate(-300, 50) rotate(${rotating_degrees[index]} 300 300)`);
-		// 		//currentDots = currentDots.attr('transform',`rotate(${rotating_degrees[index]} 0 350)`);
-				
-		// 		lastKnownPos = window.scrollY;
-		// 		console.log("["+index+"]"+rotating_degrees[index]);
-
-		// 		index++;
-		// 	}else if(index === (rotating_degrees.length)){
-		// 		event.preventDefault();
-		// 	}
-		// }
-	}
-	// ,false);	
-	
-
-
-	// function rotTween(a,b){
-	// 	var func = d3.interpolate(a,b);
-	// 	return function(t){
-	// 		return "rotate(" + func(t) + ",0,300)";
-	// 	};	
-	// }
-
-	// function rotTween(){
-	// 	var func = d3.interpolate(0,360);
-	// 	return function(t){
-	// 		return "rotate(" + func(t) + ",0,300)";
-	// 	};	
-	// }
-	
-	//const alreadyTransformed = wheel.attr('transform');
-	//console.log(alreadyTransformed);
-
-	// var interpol_rotate = [];
-	// for(i=0;i<3;i++){
-	// 	interpol_rotate[i] = d3.interpolateString("rotate("+ 45*i +",0,300)", "rotate("+ 45*(i+1) +",0,300)");
-	// }
-	// console.log(interpol_rotate);
-	
-
-	// function debounce (func, interval) {
-	// 	var timeout;
-	// 	return function () {
-	// 	  var context = this, args = arguments;
-	// 	  var later = function () {
-	// 		timeout = null;
-	// 		func.apply(context, args);
-	// 	  };
-	// 	  clearTimeout(timeout);
-	// 	  timeout = setTimeout(later, interval || 200);
-	// 	}
-	//   }
-
-
-
-
-		
-	//text
-
-	// create a new div element 
-	var newDiv = document.createElement("div"); 
-	// //Add content
-	newDiv.innerHTML="Title"; 
-	newDiv.setAttribute('class','main-items');
-	document.body.appendChild(newDiv);
-	
-
-	var rotateTimes = 0;
-	var i=0;
-	var t=0
-
-		// var textBox = d3.select('.textbox')
-		// 	.attr('transform',`translate(50,200)`)
-		// 	.attr('width',200)
-		// 	.attr('height',80);
-
-	// var textTimes = canvas.append('text')
-	// 	.attr('transform','translate(50,250)')
-	// 	.text('rotate times');
-	// var textCity = canvas.append('text')
-	// 	.attr('transform','translate(50,280)')
-	// 	.text('city');
-		
-	
-	
-
-		
-	//rotation		
-		// canvas.on("click", function(){
-				
-		// 		console.log(`i= ${i}`);
-		// 		console.log(`rotateTimes= ${rotateTimes+1}`);
-				
-		// 		clickStatus = "true"
-
-		// 		rotateTimes++;
-				
-		// 		wheel.transition()
-		// 			.attr('transform','rotate(90,0,250)');
-				
-		// 		textTimes.text(function(){
-		// 			return `rotate ${rotateTimes}`;
-		// 		})
-		// 		textCity.text(function(){
-		// 			if(i>=count_year){
-		// 				i=0;
-		// 			}
-		// 			return rows[i].city;
-		// 		})
-		// 		i++;
-				
-		// 	})
+		lastKnownPos = window.scrollY;
 		
 
 	})
+
+	
+})	
+
+
+// if (!ticking) {
+// 	window.requestAnimationFrame(function(){
+// 	  ticking = false;
+//    })
+
+// 	ticking = true; 
+// }		
+	
+	
+	
 
 function toRadians (angle) {
 	return angle * (Math.PI / 180);
