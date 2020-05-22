@@ -18,7 +18,7 @@ dataPromise.then(function(rows){
 
 	var start_dot_originalX = 310;//310
 	var start_dot_originalY = 350;//350
-	var dot_radius = 5;
+	var dot_radius = 3;
 	var startYear = rows[0].year;
 	var count_year = rows[rows.length-1].year-startYear+1;//number of all dots
 	var avg_degree = 180/count_year;
@@ -111,33 +111,8 @@ dataPromise.then(function(rows){
 	
 	window.addEventListener('scroll', function(event){
 		//document.getElementById('scrollLoc').innerHTML = window.pageYOffset + 'px';
-		
-		// var scrollSmoothTo = function(position){
-		// 	if(!window.requestAnimationFrame){
-		// 		window.requestAnimationFrame = function(callback,element){
-		// 			return setTimeout(callback,17)
-		// 		}
-		// 	}
-
-		// 	var scrollTop = document.querySelector('.canvas').scrollTop || document.body.scrollTop;
-		// 	console.log(scrollTop);
-
-		// 	var step = function(){
-		// 		var distance = position - scrollTop;
-		// 		scrollTop = scrollTop + distance/5;
-				
-		// 		if(Math.abs(distance)<1){
-		// 			window.scrollTo(0,position);
-		// 		}else{
-		// 			window.scrollTo(0,scrollTop);
-		// 			requestAnimationFrame(step);
-		// 		}
-		// 	};
-		// 	step();
-		// }
-
-		// scrollSmoothTo();
-		
+		myFunction(window.scrollY);
+		//scroll up
 		if(window.scrollY <=  lastKnownPos){
 			if(index < 0){
 				event.preventDefault();
@@ -156,8 +131,8 @@ dataPromise.then(function(rows){
 				currentDots
 					.attr('transform',`translate(0 0) rotate(${sumAngle} 0 350)`);
 			}
-			console.log('index: '+ index);
-			console.log('scroll up: '+ rotationAngle);
+			//console.log('index: '+ index);
+			//console.log('scroll up: '+ rotationAngle);
 			//console.log(window.scrollY);
 			//console.log('lastKnowPos'+lastKnownPos);
 		}
@@ -192,8 +167,8 @@ dataPromise.then(function(rows){
 				index ++;
 			}
 			
-			console.log('index: '+ index);
-			console.log('scroll down: '+ rotationAngle);
+			//console.log('index: '+ index);
+			//console.log('scroll down: '+ rotationAngle);
 			//console.log(window.scrollY);
 			//console.log('lastKnowPos'+lastKnownPos);
 		}
@@ -206,7 +181,6 @@ dataPromise.then(function(rows){
 	
 })	
 
-
 // if (!ticking) {
 // 	window.requestAnimationFrame(function(){
 // 	  ticking = false;
@@ -215,9 +189,32 @@ dataPromise.then(function(rows){
 // 	ticking = true; 
 // }		
 	
-	
-	
+function myFunction(){
+	var scrollSmoothTo = function(position){
+		if(!window.requestAnimationFrame){
+			window.requestAnimationFrame = function(callback,element){
+				return setTimeout(callback,17)
+			}
+		}
 
+		var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+		console.log(scrollTop);
+
+		var step = function(){
+			var distance = position - scrollTop;
+			scrollTop = scrollTop + distance/5;
+			
+			if(Math.abs(distance)<1){
+				window.scrollTo(0,position);
+			}else{
+				window.scrollTo(0,scrollTop);
+				requestAnimationFrame(step);
+			}
+		};
+		step();
+	}
+}
+	
 function toRadians (angle) {
 	return angle * (Math.PI / 180);
 }
